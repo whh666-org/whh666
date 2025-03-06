@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <title>工程单位转换工具</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 1000px; margin: 20px auto; padding: 20px; }
+        .converter { background: #fff; padding: 20px; margin-bottom: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        h2 { color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 5px; margin-top: 0; }
+        .input-group { margin: 15px 0; display: flex; align-items: center; flex-wrap: wrap; }
+        input, select { padding: 8px; margin: 5px; border: 1px solid #ddd; border-radius: 4px; min-width: 120px; }
+        button { background: #3498db; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; }
+        button:hover { background: #2980b9; }
+        .result { margin-top: 10px; padding: 10px; background: #ecf0f1; border-radius: 4px; }
+        .converters-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
+    </style>
+</head>
+<body>
+    <!-- API密度转换 -->
+    <div class="converter">
+        <h2>API密度转换</h2>
+        <div class="input-group">
+            <input type="number" id="apiInput" placeholder="输入值" step="any">
+            <select id="apiType">
+                <option value="api">API 度 → g/cm³</option>
+                <option value="density">g/cm³ → API 度</option>
+            </select>
+            <button onclick="convertAPI()">转换</button>
+        </div>
+        <div class="result" id="apiResult"></div>
+    </div>
+
+    <!-- 独立转换模块容器 -->
+    <div class="converters-container">
+        <!-- 长度转换 -->
+        <div class="converter">
+            <h2>长度转换</h2>
+            <div class="input-group">
+                <input type="number" id="lengthInput" placeholder="输入数值" step="any">
+                <select id="lengthFrom">
+                    <option value="m">米 (m)</option>
+                    <option value="foot">英尺 (ft)</option>
+                    <option value="inch">英寸 (in)</option>
+                </select>
+                <span> → </span>
+                <select id="lengthTo">
+                    <option value="foot">英尺 (ft)</option>
+                    <option value="m">米 (m)</option>
+                    <option value="inch">英寸 (in)</option>
+                </select>
+                <button onclick="convertLength()">转换</button>
+            </div>
+            <div class="result" id="lengthResult"></div>
+        </div>
+
+        <!-- 体积转换 -->
+        <div class="converter">
+            <h2>体积转换</h2>
+            <div class="input-group">
+                <input type="number" id="volumeInput" placeholder="输入数值" step="any">
+                <select id="volumeFrom">
+                    <option value="m3">立方米 (m³)</option>
+                    <option value="bbl">桶 (bbl)</option>
+                    <option value="ft3">立方英尺 (ft³)</option>
+                    <option value="mcf">千立方英尺 (Mcf)</option>
+                    <option value="mmcf">百万立方英尺 (MMcf)</option>
+                    <option value="10km3">万方 (10km³)</option>
+                </select>
+                <span> → </span>
+                <select id="volumeTo">
+                    <option value="bbl">桶 (bbl)</option>
+                    <option value="m3">立方米 (m³)</option>
+                    <option value="ft3">立方英尺 (ft³)</option>
+                    <option value="mcf">千立方英尺 (Mcf)</option>
+                    <option value="mmcf">百万立方英尺 (MMcf)</option>
+                    <option value="10km3">万方 (10km³)</option>
+                </select>
+                <button onclick="convertVolume()">转换</button>
+            </div>
+            <div class="result" id="volumeResult"></div>
+        </div>
+
+        <!-- 压力转换 -->
+        <div class="converter">
+            <h2>压力转换</h2>
+            <div class="input-group">
+                <input type="number" id="pressureInput" placeholder="输入数值" step="any">
+                <select id="pressureFrom">
+                    <option value="mpa">兆帕 (MPa)</option>
+                    <option value="psi">磅/平方英寸 (psi)</option>
+                </select>
+                <span> → </span>
+                <select id="pressureTo">
+                    <option value="psi">磅/平方英寸 (psi)</option>
+                    <option value="mpa">兆帕 (MPa)</option>
+                </select>
+                <button onclick="convertPressure()">转换</button>
+            </div>
+            <div class="result" id="pressureResult"></div>
+        </div>
+
+        <!-- 气油比转换 -->
+        <div class="converter">
+            <h2>气油比转换</h2>
+            <div class="input-group">
+                <input type="number" id="gorInput" placeholder="输入数值" step="any">
+                <select id="gorFrom">
+                    <option value="m3_m3">m³/m³</option>
+                    <option value="ft3_bbl">ft³/bbl</option>
+                    <option value="mcf_bbl">Mcf/bbl</option>
+                    <option value="mmcf_bbl">MMcf/bbl</option>
+                </select>
+                <span> → </span>
+                <select id="gorTo">
+                    <option value="ft3_bbl">ft³/bbl</option>
+                    <option value="m3_m3">m³/m³</option>
+                    <option value="mcf_bbl">Mcf/bbl</option>
+                    <option value="mmcf_bbl">MMcf/bbl</option>
+                </select>
+                <button onclick="convertGOR()">转换</button>
+            </div>
+            <div class="result" id="gorResult"></div>
+        </div>
+    </div>
+
+    <script>
+        // API密度转换
+        function convertAPI() {
+            const input = parseFloat(document.getElementById('apiInput').value);
+            const type = document.getElementById('apiType').value;
+            let result;
+
+            if(type === 'api') {
+                const density = 141.5 / (input + 131.5);
+                result = `密度: ${density.toFixed(4)} g/cm³`;
+            } else {
+                const api = (141.5 / input) - 131.5;
+                result = `API 度: ${api.toFixed(2)}`;
+            }
+            document.getElementById('apiResult').innerHTML = result;
+        }
+
+        // 长度转换
+        function convertLength() {
+            const input = parseFloat(document.getElementById('lengthInput').value);
+            const from = document.getElementById('lengthFrom').value;
+            const to = document.getElementById('lengthTo').value;
+            
+            const conversions = {
+                'm-foot': 3.28084,
+                'm-inch': 39.3701,
+                'foot-m': 0.3048,
+                'foot-inch': 12,
+                'inch-m': 0.0254,
+                'inch-foot': 1/12
+            };
+
+            const result = input * conversions[`${from}-${to}`];
+            document.getElementById('lengthResult').innerHTML = 
+                `${input} ${from} = ${result.toFixed(4)} ${to}`;
+        }
+
+        // 体积转换
+        function convertVolume() {
+            const input = parseFloat(document.getElementById('volumeInput').value);
+            const from = document.getElementById('volumeFrom').value;
+            const to = document.getElementById('volumeTo').value;
+            
+            const conversions = {
+                'm3-bbl': 6.28981,
+                'm3-ft3': 35.3147,
+                'm3-mcf': 0.0353147,
+                'm3-mmcf': 0.0000353147,
+                'm3-10km3': 0.0001,
+                'bbl-m3': 0.158987,
+                'ft3-m3': 0.0283168,
+                'mcf-m3': 28.3168,
+                'mmcf-m3': 28316.8,
+                '10km3-m3': 10000
+            };
+
+            const result = input * conversions[`${from}-${to}`];
+            document.getElementById('volumeResult').innerHTML = 
+                `${input} ${from} = ${result.toFixed(4)} ${to}`;
+        }
+
+        // 压力转换
+        function convertPressure() {
+            const input = parseFloat(document.getElementById('pressureInput').value);
+            const from = document.getElementById('pressureFrom').value;
+            const to = document.getElementById('pressureTo').value;
+            
+            const conversions = {
+                'mpa-psi': 145.0377,
+                'psi-mpa': 0.00689476
+            };
+
+            const result = input * conversions[`${from}-${to}`];
+            document.getElementById('pressureResult').innerHTML = 
+                `${input} ${from} = ${result.toFixed(6)} ${to}`;
+        }
+
+        // 气油比转换
+        function convertGOR() {
+            const input = parseFloat(document.getElementById('gorInput').value);
+            const from = document.getElementById('gorFrom').value;
+            const to = document.getElementById('gorTo').value;
+            
+            const conversions = {
+                'm3_m3-ft3_bbl': 5.61458,
+                'm3_m3-mcf_bbl': 0.00561458,
+                'm3_m3-mmcf_bbl': 0.00000561458,
+                'ft3_bbl-m3_m3': 0.1781076,
+                'mcf_bbl-m3_m3': 178.1076,
+                'mmcf_bbl-m3_m3': 178107.6
+            };
+
+            const result = input * conversions[`${from}-${to}`];
+            document.getElementById('gorResult').innerHTML = 
+                `${input} ${from} = ${result.toFixed(6)} ${to}`;
+        }
+    </script>
+</body>
+</html>
